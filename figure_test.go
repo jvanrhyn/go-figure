@@ -200,3 +200,36 @@ func TestLastCharLine(t *testing.T) {
 		}
 	}
 }
+
+func TestFonts(t *testing.T) {
+	names := Fonts()
+	if len(names) == 0 {
+		t.Fatal("Fonts() returned empty slice")
+	}
+
+	// "standard" is the default font — must always be present.
+	found := false
+	for _, n := range names {
+		if n == "standard" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Fonts() does not contain \"standard\"")
+	}
+
+	// Names must be sorted.
+	for i := 1; i < len(names); i++ {
+		if names[i] < names[i-1] {
+			t.Errorf("Fonts() not sorted: %q before %q", names[i-1], names[i])
+		}
+	}
+
+	// Every name must round-trip through NewFigure without error.
+	for _, n := range names {
+		if _, err := NewFigure("a", n, true); err != nil {
+			t.Errorf("NewFigure with font %q returned error: %v", n, err)
+		}
+	}
+}

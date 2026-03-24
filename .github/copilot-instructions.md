@@ -45,6 +45,8 @@ rows, err := fig.Slicify()
 
 **`font` is unexported and embedded in `Figure`** — don't export it. The public surface is `Figure` only.
 
+**`Fonts() []string`** returns sorted names of all 149 bundled fonts; pass any name to `NewFigure`. `embed.FS.ReadDir` sorts by full filename (including `.flf`), so `Fonts()` calls `sort.Strings` after stripping the extension — the two orderings differ for names like `banner3` vs `banner3-D`.
+
 **`strict` mode**: when `true`, non-ASCII runes return an error; when `false`, they are silently replaced with `?`.
 
 **FIGlet parser inputs are pre-split**: `figlet-parser.go` functions accept `[]string` (already `strings.Fields`-split header) and perform bounds checks before indexing. Any new parser helpers must follow this pattern and return `(value, error)`.

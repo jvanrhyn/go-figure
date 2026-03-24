@@ -6,6 +6,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 )
 
@@ -33,6 +34,20 @@ type font struct {
 	hardblank byte
 	reverse   bool
 	letters   [][]string
+}
+
+// Fonts returns the names of all bundled FIGlet fonts, sorted alphabetically.
+// Each name can be passed directly to NewFigure or NewColorFigure.
+func Fonts() []string {
+	entries, _ := fontsFS.ReadDir("fonts")
+	names := make([]string, 0, len(entries))
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".flf") {
+			names = append(names, strings.TrimSuffix(e.Name(), ".flf"))
+		}
+	}
+	sort.Strings(names)
+	return names
 }
 
 func newFont(name string) (font, error) {
