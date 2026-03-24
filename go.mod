@@ -1,3 +1,3 @@
-module github.com/common-nighthawk/go-figure
+module github.com/jvanrhyn/go-figure
 
 go 1.21

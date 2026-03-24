@@ -8,4 +8,10 @@ func main() {
 		panic(err)
 	}
 	myFigure.Print()
+
+	myFigure, err = figure.NewFigure("Oumie Oupie", "stellar", true)
+	if err != nil {
+		panic(err)
+	}
+	myFigure.Print()
 }
