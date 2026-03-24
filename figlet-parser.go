@@ -1,6 +1,7 @@
 package figure
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -11,31 +12,43 @@ const reverseFlag = "1"
 var charDelimiters = [3]string{"@", "#", "$"}
 var hardblanksBlacklist = [2]byte{'a', '2'}
 
-func getHeight(metadata string) int {
-	datum := strings.Fields(metadata)[1]
-	height, _ := strconv.Atoi(datum)
-	return height
+var errMalformedHeader = errors.New("malformed FIGlet header")
+
+func getHeight(fields []string) (int, error) {
+	if len(fields) < 2 {
+		return 0, errMalformedHeader
+	}
+	h, err := strconv.Atoi(fields[1])
+	if err != nil || h <= 0 {
+		return 0, errMalformedHeader
+	}
+	return h, nil
 }
 
-func getBaseline(metadata string) int {
-	datum := strings.Fields(metadata)[2]
-	baseline, _ := strconv.Atoi(datum)
-	return baseline
+func getBaseline(fields []string) (int, error) {
+	if len(fields) < 3 {
+		return 0, errMalformedHeader
+	}
+	b, err := strconv.Atoi(fields[2])
+	if err != nil || b <= 0 {
+		return 0, errMalformedHeader
+	}
+	return b, nil
 }
 
-func getHardblank(metadata string) byte {
-	datum := strings.Fields(metadata)[0]
-	hardblank := datum[len(datum)-1]
+func getHardblank(fields []string) byte {
+	if len(fields) < 1 || len(fields[0]) == 0 {
+		return ' '
+	}
+	hardblank := fields[0][len(fields[0])-1]
 	if hardblank == hardblanksBlacklist[0] || hardblank == hardblanksBlacklist[1] {
 		return ' '
-	} else {
-		return hardblank
 	}
+	return hardblank
 }
 
-func getReverse(metadata string) bool {
-	data := strings.Fields(metadata)
-	return len(data) > 6 && data[6] == reverseFlag
+func getReverse(fields []string) bool {
+	return len(fields) > 6 && fields[6] == reverseFlag
 }
 
 func lastCharLine(text string, height int) bool {

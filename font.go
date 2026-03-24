@@ -3,10 +3,14 @@ package figure
 import (
 	"bufio"
 	"bytes"
+	"embed"
+	"fmt"
 	"io"
-	"path"
 	"strings"
 )
+
+//go:embed fonts
+var fontsFS embed.FS
 
 const defaultFont = "standard"
 
@@ -31,24 +35,30 @@ type font struct {
 	letters   [][]string
 }
 
-func newFont(name string) (font font) {
-	font.setName(name)
-	fontBytes, err := Asset(path.Join("fonts", font.name+".flf"))
+func newFont(name string) (font, error) {
+	var f font
+	f.setName(name)
+	fontBytes, err := fontsFS.ReadFile("fonts/" + f.name + ".flf")
 	if err != nil {
-		panic(err)
+		return font{}, fmt.Errorf("font %q not found", f.name)
 	}
 	fontBytesReader := bytes.NewReader(fontBytes)
 	scanner := bufio.NewScanner(fontBytesReader)
-	font.setAttributes(scanner)
-	font.setLetters(scanner)
-	return font
+	if err := f.setAttributes(scanner); err != nil {
+		return font{}, fmt.Errorf("font %q: %w", f.name, err)
+	}
+	f.setLetters(scanner)
+	return f, nil
 }
 
-func newFontFromReader(reader io.Reader) (font font) {
+func newFontFromReader(reader io.Reader) (font, error) {
+	var f font
 	scanner := bufio.NewScanner(reader)
-	font.setAttributes(scanner)
-	font.setLetters(scanner)
-	return font
+	if err := f.setAttributes(scanner); err != nil {
+		return font{}, err
+	}
+	f.setLetters(scanner)
+	return f, nil
 }
 
 func (font *font) setName(name string) {
@@ -58,24 +68,34 @@ func (font *font) setName(name string) {
 	}
 }
 
-func (font *font) setAttributes(scanner *bufio.Scanner) {
+func (font *font) setAttributes(scanner *bufio.Scanner) error {
 	for scanner.Scan() {
 		text := scanner.Text()
 		if strings.HasPrefix(text, signature) {
-			font.height = getHeight(text)
-			font.baseline = getBaseline(text)
-			font.hardblank = getHardblank(text)
-			font.reverse = getReverse(text)
-			break
+			fields := strings.Fields(text)
+			h, err := getHeight(fields)
+			if err != nil {
+				return err
+			}
+			b, err := getBaseline(fields)
+			if err != nil {
+				return err
+			}
+			font.height = h
+			font.baseline = b
+			font.hardblank = getHardblank(fields)
+			font.reverse = getReverse(fields)
+			return nil
 		}
 	}
+	return fmt.Errorf("FIGlet header not found: missing %q signature", signature)
 }
 
 func (font *font) setLetters(scanner *bufio.Scanner) {
-	font.letters = append(font.letters, make([]string, font.height, font.height)) //TODO: set spaces from flf
+	font.letters = append(font.letters, make([]string, font.height))
 	for i := range font.letters[0] {
 		font.letters[0][i] = "  "
-	} //TODO: set spaces from flf
+	}
 	letterIndex := 0
 	for scanner.Scan() {
 		text, cutLength, letterIndexInc := scanner.Text(), 1, 0

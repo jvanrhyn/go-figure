@@ -3,60 +3,78 @@ package figure
 import (
 	"fmt"
 	"io"
+	"log"
 	"strings"
 	"time"
 )
 
-//stdout
-func (fig figure) Print() {
-	for _, printRow := range fig.Slicify() {
+// Print renders the figure to stdout.
+func (fig Figure) Print() {
+	rows, err := fig.Slicify()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, row := range rows {
 		if fig.color != "" {
-			printRow = colors[fig.color] + printRow + colors["reset"]
+			row = colors[fig.color] + row + colors["reset"]
 		}
-		fmt.Println(printRow)
+		fmt.Println(row)
 	}
 }
 
-// returns a colored string
-func (fig figure) ColorString() string {
-	s := ""
-	for _, printRow := range fig.Slicify() {
+// ColorString returns the figure as a color-escaped string suitable for terminal output.
+func (fig Figure) ColorString() string {
+	rows, err := fig.Slicify()
+	if err != nil {
+		return ""
+	}
+	var s strings.Builder
+	for _, row := range rows {
 		if fig.color != "" {
-			printRow = colors[fig.color] + printRow + colors["reset"]
+			row = colors[fig.color] + row + colors["reset"]
 		}
-		s += fmt.Sprintf("%s\n", printRow)
+		fmt.Fprintf(&s, "%s\n", row)
 	}
-	return s
+	return s.String()
 }
 
-func (fig figure) String() string {
-	s := ""
-	for _, printRow := range fig.Slicify() {
-		s += fmt.Sprintf("%s\n", printRow)
+// String returns the figure as a plain string (implements fmt.Stringer).
+func (fig Figure) String() string {
+	rows, err := fig.Slicify()
+	if err != nil {
+		return ""
 	}
-	return s
+	var s strings.Builder
+	for _, row := range rows {
+		fmt.Fprintf(&s, "%s\n", row)
+	}
+	return s.String()
 }
 
-func (fig figure) Scroll(duration, stillness int, direction string) {
+// Scroll animates the phrase scrolling across the terminal for duration milliseconds.
+// stillness controls the pause between frames in milliseconds.
+// direction: "left" (default) or "right".
+func (fig Figure) Scroll(duration, stillness int, direction string) {
 	endTime := time.Now().Add(time.Duration(duration) * time.Millisecond)
 	fig.phrase = fig.phrase + "   "
 	clearScreen()
 	for time.Now().Before(endTime) {
-		var shiftedPhrase string
 		chars := []byte(fig.phrase)
 		if strings.HasPrefix(strings.ToLower(direction), "r") {
-			shiftedPhrase = string(append(chars[len(chars)-1:], chars[0:len(chars)-1]...))
+			fig.phrase = string(append(chars[len(chars)-1:], chars[:len(chars)-1]...))
 		} else {
-			shiftedPhrase = string(append(chars[1:len(chars)], chars[0]))
+			fig.phrase = string(append(chars[1:], chars[0]))
 		}
-		fig.phrase = shiftedPhrase
 		fig.Print()
 		sleep(stillness)
 		clearScreen()
 	}
 }
 
-func (fig figure) Blink(duration, timeOn, timeOff int) {
+// Blink animates the figure blinking for duration milliseconds.
+// timeOn and timeOff control the on/off durations in milliseconds.
+// If timeOff is negative, it defaults to timeOn.
+func (fig Figure) Blink(duration, timeOn, timeOff int) {
 	if timeOff < 0 {
 		timeOff = timeOn
 	}
@@ -70,16 +88,18 @@ func (fig figure) Blink(duration, timeOn, timeOff int) {
 	}
 }
 
-func (fig figure) Dance(duration, freeze int) {
+// Dance animates the figure with an alternating character dance effect for duration milliseconds.
+// freeze controls the pause between frames in milliseconds.
+func (fig Figure) Dance(duration, freeze int) {
 	endTime := time.Now().Add(time.Duration(duration) * time.Millisecond)
-	font := fig.font //TODO: change to deep copy
-	font.evenLetters()
-	figures := []figure{figure{font: font}, figure{font: font}}
+	f := fig.font
+	f.evenLetters()
+	figures := []Figure{{font: f}, {font: f}}
 	clearScreen()
 	for i, c := range fig.phrase {
 		appenders := []string{" ", " "}
 		appenders[i%2] = string(c)
-		for f, _ := range figures {
+		for f := range figures {
 			figures[f].phrase = figures[f].phrase + appenders[f]
 		}
 	}
@@ -91,14 +111,17 @@ func (fig figure) Dance(duration, freeze int) {
 	}
 }
 
-//writers
-func Write(w io.Writer, fig figure) {
-	for _, printRow := range fig.Slicify() {
-		fmt.Fprintf(w, "%v\n", printRow)
+// Write renders the figure to w, one row per line.
+func Write(w io.Writer, fig Figure) {
+	rows, err := fig.Slicify()
+	if err != nil {
+		return
+	}
+	for _, row := range rows {
+		fmt.Fprintf(w, "%v\n", row)
 	}
 }
 
-//helpers
 func clearScreen() {
 	fmt.Print("\033[H\033[2J")
 }

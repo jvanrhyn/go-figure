@@ -1,0 +1,18 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - gofmt
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+
+issues:
+  exclude-rules:
+    # Example test functions intentionally ignore errors via _
+    - path: _test\.go
+      linters:
+        - errcheck
