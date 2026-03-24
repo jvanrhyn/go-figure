@@ -1,5 +1,16 @@
 # GitHub Copilot Instructions — go-figure
 
+## Branch Workflow
+
+Always do user-requested work on a feature branch, never directly on `master`.
+
+- If the current branch is `master` (or another default/protected branch), create and switch to a feature branch before making changes, running generators, committing, or opening a PR.
+- If the user names a branch, use that exact name.
+- If the user does not name a branch, create a descriptive branch name from the task, using a prefix like `feature/`, `fix/`, `chore/`, `docs/`, `refactor/`, or `test/`.
+- If already on a non-default branch, stay on it unless the user asks to change branches.
+- Do not merge directly into `master` as part of fulfilling a request unless the user explicitly asks for that.
+- Before any potentially branch-sensitive operation, verify the current branch with `git branch --show-current`.
+
 ## Commands
 
 ```bash
