@@ -52,14 +52,14 @@ func getReverse(fields []string) bool {
 }
 
 func lastCharLine(text string, height int) bool {
-	endOfLine, length := "  ", 2
+	suffixLen := 2
 	if height == 1 && len(text) > 0 {
-		length = 1
+		suffixLen = 1
 	}
-	if len(text) >= length {
-		endOfLine = text[len(text)-length:]
+	for _, delim := range charDelimiters {
+		if strings.HasSuffix(text, strings.Repeat(delim, suffixLen)) {
+			return true
+		}
 	}
-	return endOfLine == strings.Repeat(charDelimiters[0], length) ||
-		endOfLine == strings.Repeat(charDelimiters[1], length) ||
-		endOfLine == strings.Repeat(charDelimiters[2], length)
+	return false
 }

@@ -59,11 +59,11 @@ func (fig Figure) Scroll(duration, stillness int, direction string) {
 	fig.phrase = fig.phrase + "   "
 	clearScreen()
 	for time.Now().Before(endTime) {
-		chars := []byte(fig.phrase)
+		runes := []rune(fig.phrase)
 		if strings.HasPrefix(strings.ToLower(direction), "r") {
-			fig.phrase = string(append(chars[len(chars)-1:], chars[:len(chars)-1]...))
+			fig.phrase = string(append(runes[len(runes)-1:], runes[:len(runes)-1]...))
 		} else {
-			fig.phrase = string(append(chars[1:], chars[0]))
+			fig.phrase = string(append(runes[1:], runes[0]))
 		}
 		fig.Print()
 		sleep(stillness)

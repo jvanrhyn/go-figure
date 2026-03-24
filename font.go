@@ -120,8 +120,8 @@ func (font *font) setLetters(scanner *bufio.Scanner) {
 func (font *font) evenLetters() {
 	var longest int
 	for _, letter := range font.letters {
-		if len(letter) > 0 && len(letter[0]) > longest {
-			longest = len(letter[0])
+		if len(letter) > 0 {
+			longest = max(longest, len(letter[0]))
 		}
 	}
 	for _, letter := range font.letters {
