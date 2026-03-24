@@ -200,4 +200,3 @@ func TestLastCharLine(t *testing.T) {
 		}
 	}
 }
-
