@@ -1,3 +1,3 @@
 module github.com/common-nighthawk/go-figure
 
-go 1.26.1
+go 1.21
